@@ -20,9 +20,9 @@
     <h1>✨ 留言板</h1>
     
     <div class="comment-area">
-        <input type="text" id="nameInput" placeholder="你的名字" style="width: 200px;">
+        <input type="text" id="nameInput" placeholder="你的名字">
         <br><br>
-        <textarea id="commentInput" rows="3" placeholder="说点什么吧..." style="width: 100%;"></textarea>
+        <textarea id="commentInput" rows="3" placeholder="说点什么吧..."></textarea>
         <br><br>
         <button id="submitBtn">📝 提交留言</button>
     </div>
@@ -35,28 +35,33 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // Supabase 配置
         const SUPABASE_URL = 'https://phzeluynmdksscuceiwt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ikEv4eGqg3Ik6XO-5FtnAA_5qIsaAc6';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 创建客户端
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         const currentPage = window.location.pathname;
 
+        // 加载留言
         async function loadComments() {
-            document.getElementById('commentList').innerHTML = '加载中...';
+            const container = document.getElementById('commentList');
+            container.innerHTML = '加载中...';
             
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('comments')
                 .select('*')
                 .order('created_at', { ascending: false });
             
             if (error) {
-                document.getElementById('commentList').innerHTML = '加载失败：' + error.message;
+                container.innerHTML = '加载失败：' + error.message;
+                console.error('加载错误:', error);
                 return;
             }
             
-            if (data.length === 0) {
-                document.getElementById('commentList').innerHTML = '暂无留言，来抢沙发吧！';
+            if (!data || data.length === 0) {
+                container.innerHTML = '暂无留言，来抢沙发吧！';
                 return;
             }
             
@@ -65,18 +70,22 @@
                 const time = new Date(comment.created_at).toLocaleString();
                 html += `
                     <div class="comment-item">
-                        <span class="comment-name">${escapeHtml(comment.name)}</span>
+                        <strong class="comment-name">${escapeHtml(comment.name)}</strong>
                         <span class="comment-time">${time}</span>
-                        <p style="margin: 5px 0 0 0;">${escapeHtml(comment.comment)}</p>
+                        <p style="margin: 8px 0 0 0;">${escapeHtml(comment.comment)}</p>
                     </div>
                 `;
             }
-            document.getElementById('commentList').innerHTML = html;
+            container.innerHTML = html;
         }
         
+        // 提交留言
         async function submitComment() {
-            const name = document.getElementById('nameInput').value.trim();
-            const comment = document.getElementById('commentInput').value.trim();
+            const nameInput = document.getElementById('nameInput');
+            const commentInput = document.getElementById('commentInput');
+            
+            const name = nameInput.value.trim();
+            const comment = commentInput.value.trim();
             
             if (!name) {
                 alert('请输入你的名字');
@@ -87,34 +96,46 @@
                 return;
             }
             
-            const { error } = await supabase
+            // 显示提交中
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = '提交中...';
+            btn.disabled = true;
+            
+            const { error } = await supabaseClient
                 .from('comments')
                 .insert([{ name: name, comment: comment, post_url: currentPage }]);
             
+            btn.textContent = '📝 提交留言';
+            btn.disabled = false;
+            
             if (error) {
                 alert('提交失败：' + error.message);
+                console.error('提交错误:', error);
                 return;
             }
             
-            document.getElementById('nameInput').value = '';
-            document.getElementById('commentInput').value = '';
+            // 清空输入框
+            nameInput.value = '';
+            commentInput.value = '';
             
-            loadComments();
+            // 重新加载留言
+            await loadComments();
             alert('留言成功！');
         }
         
+        // 防止 XSS 攻击
         function escapeHtml(str) {
             if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
         
+        // 绑定按钮事件
         document.getElementById('submitBtn').addEventListener('click', submitComment);
         
+        // 页面加载时读取留言
         loadComments();
     </script>
 </body>
