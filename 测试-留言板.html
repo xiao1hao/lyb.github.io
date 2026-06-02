@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的留言板</title>
+    <style>
+        body { max-width: 800px; margin: 20px auto; padding: 20px; font-family: system-ui; }
+        .comment-area { margin-bottom: 30px; }
+        textarea { width: 100%; padding: 10px; font-size: 16px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+        hr { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>✨ 留言板</h1>
+    
+    <!-- 留言输入区 -->
+    <div class="comment-area">
+        <textarea id="commentInput" rows="3" placeholder="说点什么吧..."></textarea>
+        <br><br>
+        <button id="submitBtn">📝 提交留言</button>
+    </div>
+    
+    <hr>
+    <h3>📢 历史留言记录</h3>
+    
+    <!-- 重点：这是用来展示留言的容器，utterances脚本会自动加载到这里 -->
+    <div id="comments-container"></div>
+
+    <!-- 第一段：提交按钮的 JS 逻辑（保留） -->
+    <script>
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            var content = document.getElementById('commentInput').value;
+            if (!content.trim()) {
+                alert('请输入内容');
+                return;
+            }
+            
+            // 注意：这里要改成你的仓库名
+            var repoName = 'lyb/lyb.github.io';   // ← 改成你的
+            var title = '新留言：' + new Date().toLocaleString();
+            var body = '**来自网页的留言：**\n\n' + content;
+            
+            var url = 'https://github.com/' + repoName + '/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+            
+            window.open(url, '_blank');
+            alert('已跳转到 GitHub，请登录并提交 Issue 即可完成留言！');
+            document.getElementById('commentInput').value = '';
+        });
+    </script>
+
+    <!-- 第二段：显示留言列表（也要保留） -->
+    <script src="https://utteranc.es/client.js"
+            repo="lyb/lyb.github.io"   // ← 这里也改成你的
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+
+    <!-- 
+        第二步：使用 Utterances 自动将 Issues 显示为留言板 
+        这里需要配置你的仓库信息，具体的配置 ID 在下面“第三步”获取
+    -->
+    <script src="https://utteranc.es/client.js"
+        repo="USERNAME/REPO"  <!-- 这里也要替换！！！ -->
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</body>
+</html>
