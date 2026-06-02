@@ -27,7 +27,7 @@
     <!-- 重点：这是用来展示留言的容器，utterances脚本会自动加载到这里 -->
     <div id="comments-container"></div>
 
-    <!-- 第一段：提交按钮的 JS 逻辑（保留） -->
+    <!-- 第一段：提交按钮的 JS 逻辑 -->
     <script>
         document.getElementById('submitBtn').addEventListener('click', function() {
             var content = document.getElementById('commentInput').value;
@@ -36,8 +36,7 @@
                 return;
             }
             
-            // 注意：这里要改成你的仓库名
-            var repoName = 'lyb/lyb.github.io';   // ← 改成你的
+            var repoName = 'xiao1hao/lyb.github.io';
             var title = '新留言：' + new Date().toLocaleString();
             var body = '**来自网页的留言：**\n\n' + content;
             
@@ -49,25 +48,13 @@
         });
     </script>
 
-    <!-- 第二段：显示留言列表（也要保留） -->
+    <!-- 第二段：显示留言列表（utterances） -->
     <script src="https://utteranc.es/client.js"
-            repo="lyb/lyb.github.io"   // ← 这里也改成你的
+            repo="xiao1hao/lyb.github.io"
             issue-term="pathname"
             theme="github-light"
             crossorigin="anonymous"
             async>
-    </script>
-
-    <!-- 
-        第二步：使用 Utterances 自动将 Issues 显示为留言板 
-        这里需要配置你的仓库信息，具体的配置 ID 在下面“第三步”获取
-    -->
-    <script src="https://utteranc.es/client.js"
-        repo="USERNAME/REPO"  <!-- 这里也要替换！！！ -->
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
     </script>
 </body>
 </html>
