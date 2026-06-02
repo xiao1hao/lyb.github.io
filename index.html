@@ -6,14 +6,17 @@
     <style>
         body { max-width: 800px; margin: 20px auto; padding: 20px; font-family: system-ui; }
         .comment-area { margin-bottom: 30px; }
-        textarea { width: 100%; padding: 10px; font-size: 16px; }
-        input { width: 200px; padding: 8px; margin-right: 10px; font-size: 16px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+        textarea { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; }
+        input { width: 200px; padding: 8px; font-size: 16px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 6px; }
+        button:hover { background: #005fcc; }
         .comment-list { margin-top: 20px; }
-        .comment-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .comment-item { border-bottom: 1px solid #ddd; padding: 12px 0; }
         .comment-name { font-weight: bold; color: #007bff; }
         .comment-time { font-size: 12px; color: #999; margin-left: 10px; }
         hr { margin: 20px 0; }
+        .loading { color: #666; text-align: center; padding: 20px; }
+        .empty { color: #999; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
@@ -39,15 +42,17 @@
         const SUPABASE_URL = 'https://phzeluynmdksscuceiwt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ikEv4eGqg3Ik6XO-5FtnAA_5qIsaAc6';
         
-        // 创建客户端
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
         const currentPage = window.location.pathname;
+
+        const nameInput = document.getElementById('nameInput');
+        const commentInput = document.getElementById('commentInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const commentList = document.getElementById('commentList');
 
         // 加载留言
         async function loadComments() {
-            const container = document.getElementById('commentList');
-            container.innerHTML = '加载中...';
+            commentList.innerHTML = '<div class="loading">加载中...</div>';
             
             const { data, error } = await supabaseClient
                 .from('comments')
@@ -55,13 +60,13 @@
                 .order('created_at', { ascending: false });
             
             if (error) {
-                container.innerHTML = '加载失败：' + error.message;
+                commentList.innerHTML = '<div class="empty">加载失败：' + error.message + '</div>';
                 console.error('加载错误:', error);
                 return;
             }
             
             if (!data || data.length === 0) {
-                container.innerHTML = '暂无留言，来抢沙发吧！';
+                commentList.innerHTML = '<div class="empty">✨ 暂无留言，来抢沙发吧！</div>';
                 return;
             }
             
@@ -70,43 +75,41 @@
                 const time = new Date(comment.created_at).toLocaleString();
                 html += `
                     <div class="comment-item">
-                        <strong class="comment-name">${escapeHtml(comment.name)}</strong>
+                        <span class="comment-name">${escapeHtml(comment.name)}</span>
                         <span class="comment-time">${time}</span>
                         <p style="margin: 8px 0 0 0;">${escapeHtml(comment.comment)}</p>
                     </div>
                 `;
             }
-            container.innerHTML = html;
+            commentList.innerHTML = html;
         }
         
         // 提交留言
         async function submitComment() {
-            const nameInput = document.getElementById('nameInput');
-            const commentInput = document.getElementById('commentInput');
-            
             const name = nameInput.value.trim();
             const comment = commentInput.value.trim();
             
             if (!name) {
                 alert('请输入你的名字');
+                nameInput.focus();
                 return;
             }
             if (!comment) {
                 alert('请输入留言内容');
+                commentInput.focus();
                 return;
             }
             
-            // 显示提交中
-            const btn = document.getElementById('submitBtn');
-            btn.textContent = '提交中...';
-            btn.disabled = true;
+            // 禁用按钮，防止重复提交
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
             
             const { error } = await supabaseClient
                 .from('comments')
                 .insert([{ name: name, comment: comment, post_url: currentPage }]);
             
-            btn.textContent = '📝 提交留言';
-            btn.disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📝 提交留言';
             
             if (error) {
                 alert('提交失败：' + error.message);
@@ -120,7 +123,9 @@
             
             // 重新加载留言
             await loadComments();
-            alert('留言成功！');
+            
+            // 滚动到留言列表顶部
+            commentList.scrollIntoView({ behavior: 'smooth' });
         }
         
         // 防止 XSS 攻击
@@ -132,8 +137,15 @@
                 .replace(/>/g, '&gt;');
         }
         
-        // 绑定按钮事件
-        document.getElementById('submitBtn').addEventListener('click', submitComment);
+        // 绑定事件（只绑定一次）
+        submitBtn.addEventListener('click', submitComment);
+        
+        // 按回车也可以提交（Ctrl+Enter 在 textarea 中发送）
+        commentInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                submitComment();
+            }
+        });
         
         // 页面加载时读取留言
         loadComments();
